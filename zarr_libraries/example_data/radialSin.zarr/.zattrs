@@ -1,0 +1,49 @@
+{
+    "multiscales": [
+        {
+            "axes": [
+                {
+                    "name": "t",
+                    "type": "time"
+                },
+                {
+                    "name": "y",
+                    "type": "space",
+                    "unit": "micrometer"
+                },
+                {
+                    "name": "x",
+                    "type": "space",
+                    "unit": "micrometer"
+                }
+            ],
+            "datasets": [
+                {
+                    "coordinateTransformations": [
+                        {
+                            "scale": [
+                                1.0,
+                                0.0,
+                                0.0
+                            ],
+                            "type": "scale"
+                        }
+                    ],
+                    "path": "0"
+                }
+            ],
+            "metadata": {
+                "args": "[2]",
+                "description": "The fields in the metadata describe how to reproduce this multiscaling in scikit-image. The method and its parameters are given here.",
+                "kwargs": [
+                    "cval",
+                    0
+                ],
+                "method": "skimage.transform.downscale_local_mean",
+                "version": "0.21.0"
+            },
+            "type": "local_mean",
+            "version": "0.4"
+        }
+    ]
+}
