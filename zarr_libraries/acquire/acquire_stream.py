@@ -1,3 +1,11 @@
+# Code below is work in progress which is why it is commented off for now 
+# there are 2 approaches and both give me errors
+# 1) 1st approach comes from the livestream_napari.py file in acquire-docs repo
+# 2) 2nd approach comes from the __init__.py file in acquire-python repo
+
+
+# 1st approach 
+'''
 import acquire
 runtime = acquire.Runtime()
 
@@ -11,8 +19,8 @@ config = runtime.get_configuration()
 config.video[0].camera.identifier = dm.select(acquire.DeviceKind.Camera, "simulated: radial sin")
 
 # Set the storage to trash to avoid saving the data
-config.video[0].storage.identifier = dm.select(acquire.DeviceKind.Storage, "zarr")
-config.video[0].storage.settings.filename = f"stream.zarr"
+config.video[0].storage.identifier = dm.select(acquire.DeviceKind.Storage, "Zarr")
+config.video[0].storage.settings.filename = f"../example_data/stream.zarr"
 
 # Set the time for collecting data for a each frame
 config.video[0].camera.settings.exposure_time_us = 5e4  # 500 ms
@@ -56,7 +64,6 @@ config = runtime.set_configuration(config)
 # import napari and open a viewer to stream the data
 import napari
 viewer = napari.Viewer()
-
 import time
 from napari.qt.threading import thread_worker
 
@@ -106,7 +113,10 @@ def do_acquisition():
 do_acquisition()
 
 napari.run()
+'''
 
+
+# 2nd approach 
 '''
 from acquire import *
 import logging
@@ -148,13 +158,13 @@ def setup_stream(runtime: Runtime, frame_count: int) -> Properties:
     logging.warning(f"Cameras {cameras}")
 
     if len(cameras) == 0:
-        cameras = ["simulated.*sin.*"]
+        cameras = ["simulated: radial sin"]
 
     p.video[0].camera.identifier = dm.select(DeviceKind.Camera, cameras[0])
 
     p.video[0].camera.identifier = dm.select(DeviceKind.Camera, "simulated: radial sin")
-    p.video[0].storage.identifier = dm.select(DeviceKind.Storage, "zarr")
-    p.video[0].storage.settings.filename = f"stream.zarr"
+    p.video[0].storage.identifier = dm.select(DeviceKind.Storage, "Zarr")
+    p.video[0].storage.settings.filename = f"../example_data/stream.zarr"
     p.video[0].camera.settings.binning = 1
     p.video[0].camera.settings.shape = (64, 64)
     p.video[0].camera.settings.pixel_type = SampleType.U16
@@ -227,8 +237,7 @@ def start_stream() -> None:
 
         runtime = acquire.Runtime()
 
-        if stream_count == 1:
-            p = setup_stream(runtime, frame_count)
+        p = setup_stream(runtime, frame_count)
 
         p = runtime.set_configuration(p)
 
