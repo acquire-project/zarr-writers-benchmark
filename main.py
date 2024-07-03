@@ -6,52 +6,59 @@ from zarr_libraries.acquire import acquire_zarr
 
 
 abs_path_to_data = str(Path(__file__).parent / "zarr_libraries/example_data/")
+frame_multipliers = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    12, 13, 14, 15, 16, 17, 18, 19, 20,
+    25, 30, 35, 40, 45, 50, 60, 70, 80
+]
 
-print("\nRadial sin Zarr data\n---------------------\n")
-# acquire 
-for i in range(1, 1):
-    acquire_zarr.setup_camera("simulated: radial sin", abs_path_to_data + f"/acquire_data/radialSin{i}.zarr", max_frames=64*i)
-    print(f"Acquire Folder {i}")
-    acquire_zarr.setup_dimensions(
-        x_array_size=1920,
-        x_chunk_size=960,
-        y_array_size=1080,
-        y_chunk_size=540,
-        t_array_size=0,
-        t_chunk_size=64
-    )
-    acquire_zarr.create_zarr()
-    zarr_libraries.folder_size(abs_path_to_data + f"/acquire_data/radialSin{i}.zarr/0")
-    shutil.rmtree(abs_path_to_data + f"/acquire_data/radialSin{i}.zarr")
 
-print("--------------------------------------------------------------\n\n")
+def acquire_radialSin_test() -> None:
+    print("\nRadial sin Zarr data\n---------------------\n")
+    
+    for i, multiplier in enumerate(frame_multipliers):
+        acquire_zarr.setup_camera(
+            sim_type = "simulated: radial sin", 
+            folder_path = abs_path_to_data + f"/acquire_data/radialSin{multiplier}.zarr", 
+            max_frames = 64 * multiplier
+            )
+        print(f"Acquire Folder {multiplier}")
+        acquire_zarr.setup_dimensions(
+            x_array_size=1920,
+            x_chunk_size=960,
+            y_array_size=1080,
+            y_chunk_size=540,
+            t_array_size=0,
+            t_chunk_size=64
+            )
+        acquire_zarr.create_zarr()
+        zarr_libraries.folder_size(folder_path = abs_path_to_data + f"/acquire_data/radialSin{multiplier}.zarr/0")
+        shutil.rmtree(abs_path_to_data + f"/acquire_data/radialSin{multiplier}.zarr")
 
-# tensorstore
-for i in range(1, 11):
-    print(f"TensorStore Folder {i}")
-    tensorstore_zarr.copy_zarr(abs_path_to_data + f"/tensorstore_data/radialSinTs{i}.zarr", abs_path_to_data + f"/tensorstore_data/radialSinTs{i}.zarr")
-    zarr_libraries.folder_size(abs_path_to_data + f"/tensorstore_data/radialSinTs{i}.zarr")
+    print("--------------------------------------------------------------\n\n")
+#acquire_radialSin_test():
 
-print("--------------------------------------------------------------\n\n")
 
-'''
-print("\nUniform random Zarr data\n-------------------------")
-#acquire 
-abs_path_to_data = "zarr_libraries/example_data/"
-acquire_zarr.setup_camera("simulated: uniform random", abs_path_to_data + "uniformRandom.zarr", max_frames=64)
-acquire_zarr.setup_dimensions(
-    x_array_size=1920,
-    x_chunk_size=960,
-    y_array_size=1080,
-    y_chunk_size=540,
-    t_array_size=0,
-    t_chunk_size=64
-)
-acquire_zarr.create_zarr()
-zarr_libraries.folder_size(abs_path_to_data + "uniformRandom.zarr/0")
-#zarr_libraries.view_zarr(abs_path_to_data + "uniformRandom.zarr/0")
+def tensorstore_radialSin_copy_test() -> None:
+    print("\nRadial sin Zarr data\n---------------------\n")
+    
+    for index, multiplier in enumerate(frame_multipliers):
+        print(f"TensorStore Folder {multiplier}")
+        tensorstore_zarr.copy_zarr(
+            source_path = abs_path_to_data + f"/tensorstore_data/radialSinTs{multiplier}.zarr", 
+            result_path = abs_path_to_data + f"/tensorstore_data/radialSinTs{multiplier}.zarr"
+            )
+        zarr_libraries.folder_size(folder_path = abs_path_to_data + f"/tensorstore_data/radialSinTs{multiplier}.zarr")
+        
+    print("--------------------------------------------------------------\n\n")
+#tensorstore_radialSin_copy_test():
 
-# tensorstore
-tensorstore_zarr.copy_zarr(abs_path_to_data + "uniformRandomTs.zarr", abs_path_to_data + "uniformRandomTs.zarr")
-zarr_libraries.folder_size(abs_path_to_data + "uniformRandomTs.zarr")
-'''
+
+def tensorstore_continuous_write_test(append_dim_size: int) -> None:
+    print("\n\n--------Tensorstore Stress Test--------\n\n")
+    tensorstore_zarr.continuous_write(
+        result_path = abs_path_to_data + "/tensorstore_data/stressTest.zarr",
+        append_dim_size = append_dim_size
+        )
+    print("--------------------------------------------------------------\n\n")
+tensorstore_continuous_write_test(10)
