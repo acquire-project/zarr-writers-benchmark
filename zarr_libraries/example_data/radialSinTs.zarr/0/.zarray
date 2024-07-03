@@ -1,1 +1,0 @@
-{"chunks":[64,540,960],"compressor":null,"dimension_separator":"/","dtype":"|u1","fill_value":0,"filters":null,"order":"C","shape":[64,1080,1920],"zarr_format":2}

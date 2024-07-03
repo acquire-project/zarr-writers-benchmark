@@ -1,11 +1,13 @@
-# bug in the following code
-# when ran it produces errors that seem to indicate that the config isn't being set properly
-# code was referenced from the unit tests in the acquire-python repo
+import os 
+
+os.environ["ZARR_V3_EXPERIMENTAL_API"] = "1"
+os.environ["ZARR_V3_SHARDING"] = "1"
+
 import acquire 
 import napari
 import dask.array as da
-import os 
 import shutil
+from pathlib import Path
 
 
 if __name__ == "__main__":    
@@ -22,8 +24,8 @@ if __name__ == "__main__":
     config.video[0].camera.settings.exposure_time_us = 1e4
     config.video[0].camera.settings.pixel_type = acquire.SampleType.U8
     config.video[0].storage.identifier = dm.select(acquire.DeviceKind.Storage, "ZarrV3")
-    config.video[0].storage.settings.filename = f"../example_data/radialSinV3.zarr"
-    config.video[0].max_frame_count = 64
+    config.video[0].storage.settings.filename = str(Path(__file__).parent / "../example_data/test.zarr")
+    config.video[0].max_frame_count = 640   # 2 ^64 - 1 max size
 
     # storage dimensions
     dimension_x = acquire.StorageDimension(
@@ -57,8 +59,8 @@ if __name__ == "__main__":
     runtime.start()
     runtime.stop()
 
-    data = da.from_zarr(config.video[0].storage.settings.filename, component="0")
+    '''
+    data = da.from_zarr(config.video[0].storage.settings.filename, component="group/0")
     viewer = napari.view_image(data)
     napari.run()
-
-    print("Finished with no issues")
+    '''
