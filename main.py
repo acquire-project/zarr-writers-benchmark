@@ -1,5 +1,6 @@
 from pathlib import Path
 import shutil 
+import matplotlib.pyplot as plt 
 import zarr_libraries
 from zarr_libraries.tensorstore import tensorstore_zarr
 from zarr_libraries.acquire import acquire_zarr
@@ -56,9 +57,15 @@ def tensorstore_radialSin_copy_test() -> None:
 
 def tensorstore_continuous_write_test(append_dim_size: int) -> None:
     print("\n\n--------Tensorstore Stress Test--------\n\n")
-    tensorstore_zarr.continuous_write(
+    file_sizes, bandwidths = tensorstore_zarr.continuous_write(
         result_path = abs_path_to_data + "/tensorstore_data/stressTest.zarr",
         append_dim_size = append_dim_size
         )
     print("--------------------------------------------------------------\n\n")
-tensorstore_continuous_write_test(10)
+    plt.plot(file_sizes, bandwidths)
+    plt.xlabel("Data Size (GB)")
+    plt.ylabel("Bandwidth (GBps)")
+    plt.tight_layout()
+    plt.show()
+    
+tensorstore_continuous_write_test(100)

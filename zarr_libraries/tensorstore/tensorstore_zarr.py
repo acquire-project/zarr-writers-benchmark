@@ -4,12 +4,11 @@ import numpy as np
 from zarr_libraries.common import folder_size
 
 
-def continuous_write(result_path: str, append_dim_size: int) -> None:
+def continuous_write(result_path: str, append_dim_size: int) -> tuple[list, list]:
+    file_sizes = []
+    bandwidths = []
+    
     for i in range(1, append_dim_size + 1):
-        t = time.perf_counter()
-        zarr_data = np.random.randint(low=0, high=256, size=((64 * i), 1080, 1920), dtype=np.uint8)
-        print(f"TensorStore -> filling array : {time.perf_counter() - t} seconds")
-        
         zarr_spec = {
             'driver': 'zarr',
             'dtype': 'uint8',
@@ -19,7 +18,6 @@ def continuous_write(result_path: str, append_dim_size: int) -> None:
             },
             'metadata': {
                 'chunks': [64, 540, 960],
-                'compressor': None,
                 'dimension_separator': '/',
                 'dtype': '|u1',
                 'fill_value': 0,
@@ -31,10 +29,17 @@ def continuous_write(result_path: str, append_dim_size: int) -> None:
         }
         
         t = time.perf_counter()
+        zarr_data = np.random.randint(low=0, high=256, size=((64 * i), 1080, 1920), dtype=np.uint8)
         zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
         zarr_create[...].write(zarr_data).result()
-        print(f"Write #{i}\nTensorStore -> creating zarr : {time.perf_counter() - t} seconds")
-        folder_size(result_path)
+        total_time = time.perf_counter() - t
+        
+        print(f"Write #{i}\nTensorStore -> creating zarr : {total_time} seconds")
+        size = folder_size(result_path)
+        file_sizes.append(size * 10**-9) # converts bytes to GB
+        bandwidths.append((size * 10**-9) / total_time) # GB/s
+        
+    return file_sizes, bandwidths    
     
 
 def create_zarr(folder_path: str, zarr_spec: dict, zarr_data: np.ndarray) -> None:
