@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import zarr_libraries
 from zarr_libraries.tensorstore import tensorstore_zarr
 from zarr_libraries.acquire import acquire_zarr
+from zarr_libraries.zarr_python import zarr_python
 
 
 abs_path_to_data = str(Path(__file__).parent / "zarr_libraries/example_data/")
@@ -18,8 +19,9 @@ def acquire_radialSin_test() -> None:
     print("\nRadial sin Zarr data\n---------------------\n")
     
     for i, multiplier in enumerate(frame_multipliers):
+        if i == 5: break
         acquire_zarr.setup_camera(
-            sim_type = "simulated: radial sin", 
+            sim_type = "simulated: uniform random", 
             folder_path = abs_path_to_data + f"/acquire_data/radialSin{multiplier}.zarr", 
             max_frames = 64 * multiplier
             )
@@ -37,7 +39,8 @@ def acquire_radialSin_test() -> None:
         shutil.rmtree(abs_path_to_data + f"/acquire_data/radialSin{multiplier}.zarr")
 
     print("--------------------------------------------------------------\n\n")
-#acquire_radialSin_test():
+    
+#acquire_radialSin_test()
 
 
 def tensorstore_radialSin_copy_test() -> None:
@@ -52,7 +55,8 @@ def tensorstore_radialSin_copy_test() -> None:
         zarr_libraries.folder_size(folder_path = abs_path_to_data + f"/tensorstore_data/radialSinTs{multiplier}.zarr")
         
     print("--------------------------------------------------------------\n\n")
-#tensorstore_radialSin_copy_test():
+    
+#tensorstore_radialSin_copy_test()
 
 
 def tensorstore_continuous_write_test(append_dim_size: int) -> None:
@@ -62,10 +66,47 @@ def tensorstore_continuous_write_test(append_dim_size: int) -> None:
         append_dim_size = append_dim_size
         )
     print("--------------------------------------------------------------\n\n")
-    plt.plot(file_sizes, bandwidths)
-    plt.xlabel("Data Size (GB)")
-    plt.ylabel("Bandwidth (GBps)")
-    plt.tight_layout()
-    plt.show()
+    plt.plot(file_sizes, bandwidths, label="tensorstore writes")
     
-tensorstore_continuous_write_test(100)
+#tensorstore_continuous_write_test(30)
+
+
+def tensorstore_continuous_append_test(append_dim_size: int) -> None:
+    print("\n\n--------Tensorstore Stress Test--------\n\n")
+    file_sizes, bandwidths = tensorstore_zarr.continuous_write_append(
+        result_path = abs_path_to_data + "/tensorstore_data/stressTestAppend.zarr",
+        append_dim_size = append_dim_size
+        )
+    print("--------------------------------------------------------------\n\n")
+    plt.plot(file_sizes, bandwidths, label="tensorstore append")
+    
+tensorstore_continuous_append_test(200)
+
+
+def zarr_python_continuous_write_test(append_dim_size: int) -> None:
+    print("\n\n--------Zarr-Python Stress Test--------\n\n")
+    file_sizes, bandwidths = zarr_python.continuous_write(
+        result_path = abs_path_to_data + "/zarr_python_data/stressTest.zarr",
+        append_dim_size = append_dim_size
+        )
+    print("--------------------------------------------------------------\n\n")
+    plt.plot(file_sizes, bandwidths, label="zarr-python writes")
+    
+#zarr_python_continuous_write_test(30)
+
+
+def zarr_python_continuous_append_test(append_dim_size: int) -> None:
+    print("\n\n--------Zarr-Python Append Stress Test--------\n\n")
+    file_sizes, bandwidths = zarr_python.continuous_write_append(
+        result_path = abs_path_to_data + "/zarr_python_data/stressTestAppend.zarr",
+        append_dim_size = append_dim_size
+        )
+    print("--------------------------------------------------------------\n\n")
+    plt.plot(file_sizes, bandwidths, label="zarr-python append")
+    
+zarr_python_continuous_append_test(200)
+
+plt.legend()
+plt.xlabel("Data Size (GB)")
+plt.ylabel("Bandwidth (GBps)")
+plt.show()
