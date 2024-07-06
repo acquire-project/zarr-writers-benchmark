@@ -3,6 +3,7 @@
 This benchmarking suite compares the following Zarr writers (click for documentation):
 - [Acquire](https://acquire-project.github.io/acquire-docs/) 
 - [TensorStore](https://google.github.io/tensorstore/)
+- [Zarr-Python](https://zarr.readthedocs.io/en/stable/index.html)
 
 To run the benchmark, just execute the following command.
 ```bash 
