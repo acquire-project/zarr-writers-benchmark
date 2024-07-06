@@ -11,7 +11,26 @@ def view_zarr(folder_path: str) -> None:
    
     
 # getting size of zarr folder recursively 
-def folder_size(folder_path: str) -> None:
+def folder_size(folder_path: str) -> int:
+    def convert_bytes(B: int) -> str:
+        """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
+        B = float(B)
+        KB = float(1000) # change to 1024 for non mac file systems 
+        MB = float(KB ** 2) # 1,048,576
+        GB = float(KB ** 3) # 1,073,741,824
+        TB = float(KB ** 4) # 1,099,511,627,776
+
+        if B < KB:
+            return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+        elif KB <= B < MB:
+            return '{0:.2f} KB'.format(B / KB)
+        elif MB <= B < GB:
+            return '{0:.2f} MB'.format(B / MB)
+        elif GB <= B < TB:
+            return '{0:.2f} GB'.format(B / GB)
+        elif TB <= B:
+            return '{0:.2f} TB'.format(B / TB)
+    
     def getFolderSize(folder: str) -> int:
         total_size = os.path.getsize(folder)
         
@@ -25,5 +44,9 @@ def folder_size(folder_path: str) -> None:
                 
         return total_size
     
-    print("The zarr folder is of size " + str(getFolderSize(folder_path)) + " bytes\n\n")
+    size = getFolderSize(folder = folder_path)
+    formatted_size = convert_bytes(B = size)
+    
+    print(f"The zarr folder is of size {formatted_size}\n\n")
+    return size
     
