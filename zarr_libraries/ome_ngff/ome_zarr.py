@@ -45,7 +45,7 @@ def continuous_write_append(result_path: str, append_dim_size: int) -> tuple[lis
     
     for i in range(2, append_dim_size + 1):
         t = time.perf_counter()
-        new_data = np.random.randint(low=0, high=256, size=((64 * i), 1080, 1920), dtype=np.uint)
+        new_data = np.random.randint(low=0, high=256, size=((64 * i), 1080, 1920), dtype=np.uint8)
         zarr_data = np.concatenate((zarr_data, new_data), axis=0)
         write_image(image=zarr_data, group=root, axes="tyx", storage_options=dict(chunks=(64, 540, 960)))
         total_time += time.perf_counter() - t

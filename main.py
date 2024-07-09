@@ -113,8 +113,8 @@ def ome_zarr_continuous_write_test(append_dim_size: int) -> None:
     
 def ome_zarr_continuous_append_test(append_dim_size: int) -> None:
     print("\n\n--------Ome-Zarr Append Stress Test--------\n\n")
-    file_sizes, bandwidths = zarr_python.continuous_write_append(
-        result_path = abs_path_to_data + "/zarr_python_data/stressTestAppend.zarr",
+    file_sizes, bandwidths = ome_zarr.continuous_write_append(
+        result_path = abs_path_to_data + "/ome_zarr_data/stressTestAppend.zarr",
         append_dim_size = append_dim_size
         )
     print("--------------------------------------------------------------\n\n")
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     '''
     #tensorstore_continuous_append_test(append_dim_size=200)
     #zarr_python_continuous_append_test(append_dim_size=200) 
-    #ome_zarr_continuous_append_test(append_dim_size=200)
+    ome_zarr_continuous_append_test(append_dim_size=12) # at around 17 gigs of data ome-zarr throws an error, 12 is right before that happens
    
     '''
     Continuous write tests:
