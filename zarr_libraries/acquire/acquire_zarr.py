@@ -1,6 +1,5 @@
 import acquire 
 import time
-from pathlib import Path
 
 
 global runtime 
@@ -59,8 +58,10 @@ def setup_dimensions(
     runtime.set_configuration(config)
 
 
-def create_zarr() -> None:
+def create_zarr() -> int:
     t = time.perf_counter()
     runtime.start()
     runtime.stop()
-    print(f"Acquire -> creating zarr : {time.perf_counter() - t} seconds")
+    total_time = time.perf_counter() - t
+    print(f"Acquire -> creating zarr : {total_time} seconds")
+    return total_time
