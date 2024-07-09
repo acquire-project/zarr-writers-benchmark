@@ -4,6 +4,7 @@ This benchmarking suite compares the following Zarr writers (click for documenta
 - [Acquire](https://acquire-project.github.io/acquire-docs/) 
 - [TensorStore](https://google.github.io/tensorstore/)
 - [Zarr-Python](https://zarr.readthedocs.io/en/stable/index.html)
+- [OME-Zarr](https://ome-zarr.readthedocs.io/en/stable/)
 
 To run the benchmark, just execute the following command.
 ```bash 
