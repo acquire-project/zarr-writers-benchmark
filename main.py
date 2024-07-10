@@ -127,9 +127,10 @@ if __name__ == "__main__":
     - These tests benchmark the continuous appending to a single zarr folder 
     - The append dimension size passed in equates to ~26 gigs of data
     '''
-    #tensorstore_continuous_append_test(append_dim_size=200)
-    #zarr_python_continuous_append_test(append_dim_size=200) 
-    ome_zarr_continuous_append_test(append_dim_size=12) # at around 17 gigs of data ome-zarr throws an error, 12 is right before that happens
+    zarr_python_continuous_append_test(append_dim_size=300)
+    tensorstore_continuous_append_test(append_dim_size=300) 
+    # at around 17 gigs of data ome-zarr throws an error, append_dim_size = 12 is right before that happens
+    #ome_zarr_continuous_append_test(append_dim_size=12) 
    
     '''
     Continuous write tests:

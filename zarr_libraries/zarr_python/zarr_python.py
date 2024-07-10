@@ -1,6 +1,7 @@
 import zarr 
 import numpy as np
 import time 
+import shutil
 from zarr_libraries import folder_size
 
 def continuous_write(result_path: str, append_dim_size: int) -> tuple[list, list]:
@@ -55,4 +56,5 @@ def continuous_write_append(result_path: str, append_dim_size: int) -> tuple[lis
         file_sizes.append(size * 10**-9) # converts bytes to GB
         bandwidths.append((size * 10**-9) / total_time) # GB/s
         
+    shutil.rmtree(result_path)
     return file_sizes, bandwidths
