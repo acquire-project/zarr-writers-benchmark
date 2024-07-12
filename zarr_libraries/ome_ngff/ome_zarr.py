@@ -7,7 +7,6 @@ from ome_zarr.io import parse_url
 from ome_zarr.writer import write_image
 from pathlib import Path
 import matplotlib.pyplot as plt
-import sys
 
 
 class Ome_Zarr:
@@ -21,22 +20,27 @@ class Ome_Zarr:
         file_sizes = []
         bandwidths = []
         
-        for i in range(1, append_dim_size + 1):
+        i = 1
+        while i < append_dim_size + 1:
+            if i == 0: i = 1
             new_shape = (self.shape[0] * i, *self.shape[1:])  # modify the append dimension, unpack the rest
             
             store = parse_url(result_path, mode="w").store
             root = zarr.group(store=store)
-            
-            t = time.perf_counter()
             zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
-            write_image(image=zarr_data, group=root, axes="tyx", storage_options=dict(chunks=self.chunks))
+
+            t = time.perf_counter()
+            write_image(image=zarr_data, group=root, axes="tyx", storage_options=dict(chunks=(self.chunks)))
             total_time = time.perf_counter() - t
 
             print(f"Write #{i}\nOME-Zarr -> creating zarr : {total_time} seconds")
-            size = folder_size(result_path)
+            folder_size(result_path)
+            size = np.prod(new_shape)
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
             shutil.rmtree(result_path)
+            
+            i += 9 if i == 1 else 10
             
         return file_sizes, bandwidths
     

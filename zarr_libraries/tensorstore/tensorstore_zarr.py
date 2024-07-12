@@ -18,7 +18,7 @@ class Tensorstore:
         file_sizes = []
         bandwidths = []
         
-        for i in range(1, append_dim_size + 1):
+        for i in range(0, append_dim_size + 1, 10):
             new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
             
             zarr_spec = {
@@ -40,14 +40,16 @@ class Tensorstore:
                 }
             }
             
-            t = time.perf_counter()
             zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
             zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
+            
+            t = time.perf_counter()
             zarr_create[...].write(zarr_data).result()
             total_time = time.perf_counter() - t
             
             print(f"Write #{i}\nTensorStore -> creating zarr : {total_time} seconds")
-            size = folder_size(result_path)
+            folder_size(result_path)
+            size = np.prod(new_shape)
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
             
