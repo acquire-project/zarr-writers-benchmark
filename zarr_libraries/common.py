@@ -31,7 +31,7 @@ def folder_size(folder_path: str) -> int:
         elif TB <= B:
             return '{0:.2f} TB'.format(B / TB)
     
-    def getFolderSize(folder: str) -> int:
+    def get_folder_size(folder: str) -> int:
         total_size = os.path.getsize(folder)
         
         for item in os.listdir(folder):
@@ -40,11 +40,11 @@ def folder_size(folder_path: str) -> int:
             if os.path.isfile(item_path):
                 total_size += os.path.getsize(item_path)
             elif os.path.isdir(item_path):
-                total_size += getFolderSize(item_path)
+                total_size += get_folder_size(item_path)
                 
         return total_size
     
-    size = getFolderSize(folder = folder_path)
+    size = get_folder_size(folder = folder_path)
     formatted_size = convert_bytes(B = size)
     
     print(f"The zarr folder is of size {formatted_size}\n\n")
