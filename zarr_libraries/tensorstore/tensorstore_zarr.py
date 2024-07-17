@@ -4,7 +4,7 @@ import shutil
 import numpy as np
 from zarr_libraries import folder_size
 from pathlib import Path
-import matplotlib.pyplot as plt
+import matplotlib.axes
 
 
 class Tensorstore:
@@ -18,9 +18,10 @@ class Tensorstore:
         file_sizes = []
         bandwidths = []
         
-        for i in range(0, append_dim_size + 1, 10):
+        for i in range(10, append_dim_size + 1, 10):
             new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
             
+            # The metadata for the zarr folder that is to be created (specifications)
             zarr_spec = {
                 'driver': 'zarr',
                 'dtype': 'uint8',
@@ -40,27 +41,32 @@ class Tensorstore:
                 }
             }
             
+            # populate the data for the zarr folder with new shape and create the folder itself 
             zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
-            zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
+            zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()  
             
+            # timing the writing of the data to the zarr folder in seconds
             t = time.perf_counter()
             zarr_create[...].write(zarr_data).result()
             total_time = time.perf_counter() - t
             
+            # prints info to the terminal
             print(f"Write #{i}\nTensorStore -> creating zarr : {total_time} seconds")
             folder_size(result_path)
-            size = np.prod(new_shape)
+            
+            size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
             
+        shutil.rmtree(result_path) # clean up by deleting zarr folder
         return file_sizes, bandwidths 
     
     
     def __continuous_append(self, result_path: str, append_dim_size: int) -> tuple[list, list]:
-        file_sizes = []
+        write_number = []
         bandwidths = []
-        total_time = 0
         
+        # The metadata for the zarr folder that is to be created (specifications)
         zarr_spec = {
             'driver': 'zarr',
             'dtype': 'uint8',
@@ -79,74 +85,55 @@ class Tensorstore:
                 'zarr_format': 2,
             }
         }
-        t = time.perf_counter()
+        
+        # create and write initial data
         zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
         zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
-        zarr_create[...].write(zarr_data).result()
-        total_time += (time.perf_counter() - t)    
+        zarr_create[...].write(zarr_data).result()  
         
         for i in range(2, append_dim_size + 1):
             new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
             
-            t = time.perf_counter()
+            # use resize function in tensorstore to dynamically resize the zarr folder that we created 
             zarr_create = zarr_create.resize(exclusive_max=new_shape).result()
             zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
+            
+            # timing the writing of the data to the back of the zarr folder in seconds
+            t = time.perf_counter()
             zarr_create[(self.shape[0] * (i - 1)):, :, :].write(zarr_data).result()
-            total_time += time.perf_counter() - t
+            total_time = time.perf_counter() - t
                 
+            # print info to the terminal
             print(f"Write #{i}\nTensorStore -> appending zarr : {total_time} seconds")
-            size = folder_size(result_path)
-            file_sizes.append(size * 10**-9) # converts bytes to GB
+            folder_size(result_path)
+            
+            size = np.prod(self.shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
+            write_number.append(i) # append the write number
             bandwidths.append((size * 10**-9) / total_time) # GB/s
         
         shutil.rmtree(result_path)
-        return file_sizes, bandwidths
-
-
-    def __create_zarr(self, folder_path: str, zarr_spec: dict, zarr_data: np.ndarray) -> None:
-        zarr_spec['kvstore']['path'] = folder_path
-        t = time.perf_counter()
-        zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
-        zarr_create[...].write(zarr_data).result()
-        print(f"TensorStore -> creating zarr : {time.perf_counter() - t} seconds")
-        
-        
-    def _copy_zarr(self, source_path: str, result_path: str) -> None:
-        # copying data from source 
-        zarr_store = ts.open(
-            {
-                'driver': 'zarr',
-                'kvstore': {
-                    'driver': 'file',
-                    'path': source_path
-                }
-            },
-            open=True
-        ).result()
-        zarr_data = zarr_store.read().result().copy()
-        zarr_spec = zarr_store.spec().to_json()
-    
-        # writing data to the new folder
-        self.__create_zarr(result_path, zarr_spec=zarr_spec, zarr_data=zarr_data)
+        return write_number, bandwidths
         
     
-    def continuous_write_test(self, append_dim_size: int) -> None:
+    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+        # calls continuous write function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
             result_path = self.abs_path_to_data + "/stressTest.zarr",
             append_dim_size = append_dim_size
             )
         print("--------------------------------------------------------------\n\n")
-        plt.plot(file_sizes, bandwidths, label="tensorstore writes")
+        graph.plot(file_sizes, bandwidths, label="TensorStore")
 
 
-    def continuous_append_test(self, append_dim_size: int) -> None:
+    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+        # calls continuous append function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
-        file_sizes, bandwidths = self.__continuous_append(
+        write_number, bandwidths = self.__continuous_append(
             result_path = self.abs_path_to_data + "/stressTestAppend.zarr",
             append_dim_size = append_dim_size
             )
         print("--------------------------------------------------------------\n\n")
-        plt.plot(file_sizes, bandwidths, label="tensorstore append")
+        graph.plot(write_number, bandwidths, label="TensorStore")
         
         
