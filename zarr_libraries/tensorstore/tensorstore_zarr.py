@@ -14,12 +14,12 @@ class Tensorstore:
         self.chunks = chunks      
         
     
-    def __continuous_write(self, result_path: str, append_dim_size: int) -> tuple[list, list]:
+    def __continuous_write(self, result_path: str, append_dim_size: int, step: int) -> tuple[list, list]:
         file_sizes = []
         bandwidths = []
         
-        for i in range(10, append_dim_size + 1, 10):
-            new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
+        for i in range(0, append_dim_size, step):
+            new_shape = [self.shape[0] * (i + 1), *self.shape[1:]]  # modify the append dimension, unpack the rest
             
             # The metadata for the zarr folder that is to be created (specifications)
             zarr_spec = {
@@ -51,7 +51,7 @@ class Tensorstore:
             total_time = time.perf_counter() - t
             
             # prints info to the terminal
-            print(f"Write #{i}\nTensorStore -> creating zarr : {total_time} seconds")
+            print(f"Write #{i + 1}\nTensorStore -> creating zarr : {total_time} seconds")
             folder_size(result_path)
             
             size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
@@ -93,13 +93,12 @@ class Tensorstore:
         
         for i in range(2, append_dim_size + 1):
             new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
-            
-            # use resize function in tensorstore to dynamically resize the zarr folder that we created 
-            zarr_create = zarr_create.resize(exclusive_max=new_shape).result()
             zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
             
+            # use resize function in tensorstore to dynamically resize the zarr folder that we created 
             # timing the writing of the data to the back of the zarr folder in seconds
             t = time.perf_counter()
+            zarr_create = zarr_create.resize(exclusive_max=new_shape).result()
             zarr_create[(self.shape[0] * (i - 1)):, :, :].write(zarr_data).result()
             total_time = time.perf_counter() - t
                 
@@ -115,18 +114,20 @@ class Tensorstore:
         return write_number, bandwidths
         
     
-    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int, step: int) -> None:
         # calls continuous write function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
             result_path = self.abs_path_to_data + "/stressTest.zarr",
-            append_dim_size = append_dim_size
+            append_dim_size = append_dim_size,
+            step = step
             )
         print("--------------------------------------------------------------\n\n")
-        graph.plot(file_sizes, bandwidths, label="TensorStore")
+        graph.plot(file_sizes, bandwidths, label="TensorStore", marker='o')
+        avg_graph.bar("TensorStore", np.average(bandwidths))
 
 
-    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
         # calls continuous append function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
         write_number, bandwidths = self.__continuous_append(
@@ -135,5 +136,6 @@ class Tensorstore:
             )
         print("--------------------------------------------------------------\n\n")
         graph.plot(write_number, bandwidths, label="TensorStore")
+        avg_graph.bar("TensorStore", np.average(bandwidths))
         
         
