@@ -10,7 +10,7 @@ def main() -> None:
     zarr_python = Zarr_Python(shape=shape, chunks=chunks)
     tensorstore = Tensorstore(shape=shape, chunks=chunks)
     ome_zarr = Ome_Zarr(shape=shape, chunks=chunks)
-    z5 = Z5(shape=shape, chunks=chunks)
+    #z5 = Z5(shape=shape, chunks=chunks)
     
     '''
     Append Tests:
@@ -19,8 +19,8 @@ def main() -> None:
         * TensorStore
         * Zarr Python
     '''
-    zarr_python.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100)
-    tensorstore.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100) 
+    zarr_python.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=10)
+    tensorstore.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=10) 
     
     # setting up graph for append tests
     graph[1][0].set_xlabel("Write Number")
@@ -36,10 +36,10 @@ def main() -> None:
         * OME Zarr
         * z5py
     '''
-    tensorstore.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
-    zarr_python.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
-    ome_zarr.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)   # crashes at anything above 16gigs (append_dim_size 90 on my machine)
-    z5.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
+    tensorstore.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=1, step=1)
+    zarr_python.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=1, step=1)
+    ome_zarr.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=1, step=1)   # crashes at anything above 16gigs (append_dim_size 90 on my machine)
+    #z5.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
     
     # setting up graphs for write tests
     graph[0][0].set_xlabel("Data Size (GB)")

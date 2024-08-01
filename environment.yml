@@ -1,0 +1,13 @@
+name: benchmark
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - matplotlib
+  - napari
+  - pyqt
+  - ome-zarr
+  - pip:
+      - ml-dtypes
+      - tensorstore
