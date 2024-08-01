@@ -81,7 +81,9 @@ class Zarr_Python:
         return write_number, bandwidths
 
 
-    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int, step: int) -> None:
+    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, 
+                              avg_graph: matplotlib.axes._axes.Axes, 
+                              append_dim_size: int, step: int) -> int:
         # calls continuous write function and graphs results
         print("\n\n--------Zarr-Python Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
@@ -92,9 +94,12 @@ class Zarr_Python:
         print("--------------------------------------------------------------\n\n")
         graph.plot(file_sizes, bandwidths, label="Zarr-Python", marker='o')
         avg_graph.bar("Zarr-Python", np.average(bandwidths))
-    
+        return np.average(bandwidths)
 
-    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+
+    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, 
+                               avg_graph: matplotlib.axes._axes.Axes, 
+                               append_dim_size: int) -> int:
         # calls continuous append function and graphs results
         print("\n\n--------Zarr-Python Append Stress Test--------\n\n")
         write_number, bandwidths = self.__continuous_append(
@@ -104,5 +109,6 @@ class Zarr_Python:
         print("--------------------------------------------------------------\n\n")
         graph.plot(write_number, bandwidths, label="Zarr-Python")
         avg_graph.bar("Zarr-Python", np.average(bandwidths))
+        return np.average(bandwidths)
         
         

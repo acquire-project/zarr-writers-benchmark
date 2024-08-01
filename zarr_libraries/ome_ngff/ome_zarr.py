@@ -45,7 +45,9 @@ class Ome_Zarr:
         return file_sizes, bandwidths
     
     
-    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int, step: int) -> None:
+    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, 
+                              avg_graph: matplotlib.axes._axes.Axes, 
+                              append_dim_size: int, step: int) -> int:
         # calls continuous write function and graphs results
         print("\n\n--------OME-Zarr Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
@@ -56,5 +58,6 @@ class Ome_Zarr:
         print("--------------------------------------------------------------\n\n")
         graph.plot(file_sizes, bandwidths, label="OME-Zarr", marker='o')
         avg_graph.bar("OME-Zarr", np.average(bandwidths))
+        return np.average(bandwidths)
 
         

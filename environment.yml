@@ -8,6 +8,7 @@ dependencies:
   - napari
   - pyqt
   - ome-zarr
+  - rapidsai::kvikio
   - pip:
       - ml-dtypes
       - tensorstore
