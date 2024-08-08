@@ -20,10 +20,10 @@ def main() -> None:
         * Zarr Python
     '''
     bandwidth_map["TensorStore Append"] = (
-        tensorstore.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100)
+        tensorstore.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=400)
     ) 
     bandwidth_map["Zarr Python Append"] = (
-        zarr_python.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100)
+        zarr_python.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=400)
     ) 
     
     # setting up graph for append tests
@@ -40,14 +40,14 @@ def main() -> None:
         * OME Zarr
     '''
     bandwidth_map["TensorStore Write"] = (
-        tensorstore.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
+        tensorstore.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=80, step=5)
     )   
     bandwidth_map["Zarr Python Write"] = (
-        zarr_python.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
+        zarr_python.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=80, step=5)
     )
     # ome-zarr crashes at anything above 16gigs on my machine
     bandwidth_map["OME Zarr Write"] = (
-        ome_zarr.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=10, step=1)
+        ome_zarr.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=45, step=5)
     )      
     
     # print the average bandwidth for each of the tests
