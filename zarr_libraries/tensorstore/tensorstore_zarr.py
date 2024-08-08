@@ -114,7 +114,9 @@ class Tensorstore:
         return write_number, bandwidths
         
     
-    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int, step: int) -> None:
+    def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, 
+                              avg_graph: matplotlib.axes._axes.Axes, 
+                              append_dim_size: int, step: int) -> int:
         # calls continuous write function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
@@ -125,9 +127,12 @@ class Tensorstore:
         print("--------------------------------------------------------------\n\n")
         graph.plot(file_sizes, bandwidths, label="TensorStore", marker='o')
         avg_graph.bar("TensorStore", np.average(bandwidths))
+        return np.average(bandwidths)
 
 
-    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, avg_graph: matplotlib.axes._axes.Axes, append_dim_size: int) -> None:
+    def continuous_append_test(self, graph: matplotlib.axes._axes.Axes, 
+                               avg_graph: matplotlib.axes._axes.Axes, 
+                               append_dim_size: int) -> int:
         # calls continuous append function and graphs results
         print("\n\n--------Tensorstore Stress Test--------\n\n")
         write_number, bandwidths = self.__continuous_append(
@@ -137,5 +142,6 @@ class Tensorstore:
         print("--------------------------------------------------------------\n\n")
         graph.plot(write_number, bandwidths, label="TensorStore")
         avg_graph.bar("TensorStore", np.average(bandwidths))
+        return np.average(bandwidths)
         
         
