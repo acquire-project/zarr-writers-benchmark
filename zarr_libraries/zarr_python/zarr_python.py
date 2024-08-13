@@ -2,9 +2,12 @@ import zarr
 import numpy as np
 import time 
 import shutil
+
+import zarr.storage
 from zarr_libraries import folder_size
 from pathlib import Path
 import matplotlib.axes
+from numcodecs import Blosc
 
 
 class Zarr_Python:
@@ -12,6 +15,7 @@ class Zarr_Python:
         self.abs_path_to_data = str((Path(__file__).parent / "../example_data/zarr_python_data").resolve())
         self.shape = shape
         self.chunks = chunks
+        self.compressor = Blosc(cname="lz4", clevel=1)
 
     
     def __continuous_write(self, result_path: str, append_dim_size: int, step: int) -> tuple[list, list]:
@@ -27,10 +31,11 @@ class Zarr_Python:
                 mode="w", 
                 shape=new_shape,   
                 chunks=self.chunks, 
-                dtype="u1"
+                dtype="u1",
+                compressor=self.compressor
                 )
             zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
-            
+
             # timing the data written to the zarr folder in seconds
             t = time.perf_counter()
             zarr_create[...] = zarr_data
@@ -44,7 +49,7 @@ class Zarr_Python:
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
             shutil.rmtree(result_path) # clean up by deleting created zarr folder   
-        
+            print(zarr_create)
         return file_sizes, bandwidths
     
     
@@ -59,7 +64,8 @@ class Zarr_Python:
                 mode="w", 
                 shape=self.shape, 
                 chunks=self.chunks, 
-                dtype="u1"
+                dtype="u1",
+                compressor=self.compressor
                 )
         zarr_create[...] = zarr_data
         

@@ -30,6 +30,11 @@ class Tensorstore:
                     'path': result_path,
                 },
                 'metadata': {
+                    'compressor': {
+                        'id': 'blosc',
+                        'cname': 'lz4',
+                        'clevel': 1  
+                    },
                     'chunks': self.chunks,
                     'dimension_separator': '/',
                     'dtype': '|u1',
@@ -57,7 +62,7 @@ class Tensorstore:
             size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
-            
+            print(zarr_create)
         shutil.rmtree(result_path) # clean up by deleting zarr folder
         return file_sizes, bandwidths 
     
@@ -75,6 +80,11 @@ class Tensorstore:
                 'path': result_path,
             },
             'metadata': {
+                'compressor': {
+                    'id': 'blosc',
+                    'cname': 'lz4',
+                    'clevel': 1  
+                },
                 'chunks': self.chunks,
                 'dimension_separator': '/',
                 'dtype': '|u1',
@@ -90,7 +100,7 @@ class Tensorstore:
         zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
         zarr_create = ts.open(zarr_spec, create=True, delete_existing=True).result()
         zarr_create[...].write(zarr_data).result()  
-        
+       
         for i in range(2, append_dim_size + 1):
             new_shape = [self.shape[0] * i, *self.shape[1:]]  # modify the append dimension, unpack the rest
             zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
