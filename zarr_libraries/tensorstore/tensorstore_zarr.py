@@ -62,7 +62,7 @@ class Tensorstore:
             size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
-            print(zarr_create)
+          
         shutil.rmtree(result_path) # clean up by deleting zarr folder
         return file_sizes, bandwidths 
     

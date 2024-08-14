@@ -2,7 +2,6 @@ import zarr
 import numpy as np
 import time 
 import shutil
-
 import zarr.storage
 from zarr_libraries import folder_size
 from pathlib import Path
@@ -49,7 +48,7 @@ class Zarr_Python:
             file_sizes.append(size * 10**-9) # converts bytes to GB
             bandwidths.append((size * 10**-9) / total_time) # GB/s
             shutil.rmtree(result_path) # clean up by deleting created zarr folder   
-            print(zarr_create)
+
         return file_sizes, bandwidths
     
     
