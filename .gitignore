@@ -1,4 +1,6 @@
 .DS_Store
-zarr_libraries/example_data/*
 __pycache__/
 .vscode/
+example_data/
+build/
+test.*

@@ -1,14 +1,5 @@
-
-import dask.array as da
 import os
 
-
-# viewing data with napari
-def view_zarr(folder_path: str) -> None:
-    data = da.from_zarr(folder_path)
-    napari.view_image(data, colormap='magma')
-    napari.run()
-   
     
 # getting size of zarr folder recursively 
 def folder_size(folder_path: str) -> int:

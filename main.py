@@ -45,7 +45,7 @@ def main() -> None:
             bandwidth_map[name + " Write"] = (
                 writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=15, step=5)
             ) 
-        
+         
         # print the average bandwidth for each of the tests
         print(f"Shape {shape}, Chunks {chunks}")
         print("----------Bandwidth----------")

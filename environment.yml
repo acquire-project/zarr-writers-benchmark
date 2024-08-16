@@ -6,11 +6,11 @@ channels:
 dependencies:
   - pip
   - matplotlib
-  - napari
   - pyqt
   - ome-zarr
   - kvikio
   - zarr=2.15*
   - pip:
+      - cmake
       - ml-dtypes
       - tensorstore
