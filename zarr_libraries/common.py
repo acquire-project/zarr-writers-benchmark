@@ -1,4 +1,4 @@
-import napari
+
 import dask.array as da
 import os
 

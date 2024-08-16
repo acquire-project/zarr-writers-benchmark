@@ -5,12 +5,13 @@ from zarr_libraries import *
 def main() -> None:
     
     def run_all_tests(shape: list, chunks: list) -> None:
-        bandwidth_map = {}
         fig, graph = plt.subplots(2, 2)
-        
-        zarr_python = Zarr_Python(shape=shape, chunks=chunks)
-        tensorstore = Tensorstore(shape=shape, chunks=chunks)
-        ome_zarr = Ome_Zarr(shape=shape, chunks=chunks)
+        bandwidth_map = {}
+        zarr_writers = {
+            "TensorStore" : Tensorstore(shape=shape, chunks=chunks),
+            "Zarr Python" : Zarr_Python(shape=shape, chunks=chunks),
+            "OME Zarr"    : Ome_Zarr(shape=shape, chunks=chunks)   
+        }
         
         '''
         Append Tests:
@@ -19,12 +20,13 @@ def main() -> None:
             * TensorStore
             * Zarr Python
         '''
-        bandwidth_map["TensorStore Append"] = (
-            tensorstore.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=200)
-        ) 
-        bandwidth_map["Zarr Python Append"] = (
-            zarr_python.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=200)
-        ) 
+        for name, writer in zarr_writers.items():
+            if name != "TensorStore" and name != "Zarr Python":
+                continue
+             
+            bandwidth_map[name + " Append"] = (
+                writer.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=50)
+            ) 
         
         # setting up graph for append tests
         graph[1][0].set_xlabel("Write Number")
@@ -39,16 +41,10 @@ def main() -> None:
             * Zarr Python
             * OME Zarr
         '''
-        bandwidth_map["TensorStore Write"] = (
-            tensorstore.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=51, step=5)
-        )   
-        bandwidth_map["Zarr Python Write"] = (
-            zarr_python.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=51, step=5)
-        )
-        # ome-zarr usually crashes before the other libraries
-        bandwidth_map["OME Zarr Write"] = (
-            ome_zarr.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=46, step=5)
-        )      
+        for name, writer in zarr_writers.items():
+            bandwidth_map[name + " Write"] = (
+                writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=15, step=5)
+            ) 
         
         # print the average bandwidth for each of the tests
         print(f"Shape {shape}, Chunks {chunks}")
@@ -75,7 +71,6 @@ def main() -> None:
         
     
     run_all_tests(shape=[64, 1080, 1920], chunks=[64, 540, 960])
-    #run_all_tests(shape=[64, 1920, 1920], chunks=[64, 540, 960])
     plt.show()
     
 
