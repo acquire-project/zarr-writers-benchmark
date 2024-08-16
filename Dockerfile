@@ -3,8 +3,9 @@ FROM continuumio/miniconda3
 # set directory to root for insatlling dependencies
 WORKDIR /app
 
-# install system dependencies including OpenGL
+# install system dependencies 
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get install -y \
     python3-opengl \
     gcc \
@@ -20,6 +21,8 @@ RUN git clone https://github.com/abcucberkeley/cpp-zarr && \
     cmake .. && \
     make -j && \
     make install
+
+RUN pip install "pybind11[global]"
 
 # set directory for code base
 WORKDIR /app/benchmark
