@@ -2,13 +2,11 @@ name: benchmark
 channels:
   - defaults
   - conda-forge
-  - rapidsai
 dependencies:
   - pip
   - matplotlib
   - pyqt
   - ome-zarr
-  - kvikio
   - zarr=2.15*
   - pip:
       - cmake

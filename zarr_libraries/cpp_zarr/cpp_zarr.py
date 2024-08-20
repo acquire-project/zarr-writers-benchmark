@@ -24,7 +24,7 @@ class Cpp_Zarr:
             total_time = write_zarr(result_path, self.chunks, new_shape)
 
             # print info to the terminal 
-            print(f"Write #{i + 1}\nOME-Zarr -> creating zarr : {total_time} seconds")
+            print(f"Write #{i + 1}\nCpp Zarr -> creating zarr : {total_time} seconds")
             folder_size(result_path)
             
             size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes

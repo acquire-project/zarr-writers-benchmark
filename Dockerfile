@@ -42,5 +42,12 @@ ENV PATH=/opt/conda/envs/benchmark/bin:$PATH
 # copy source code into docker app
 COPY . .
 
+# build c++ code 
+RUN mkdir build && \
+    cd build && \
+    cmake .. && \
+    make && \
+    cd ..
+
 # running the benchmark
 #CMD [ "python", "main.py" ]

@@ -41,6 +41,7 @@ float write_zarr(string path, vector<uint64_t> chunks, vector<uint64_t> shape)
     zarrObject.set_fill_value(1);
     zarrObject.set_order("C");
     zarrObject.set_dimension_separator("/");
+    zarrObject.set_clevel(1);
     zarrObject.write_zarray();
 
     // create zarr files and benchmark time
