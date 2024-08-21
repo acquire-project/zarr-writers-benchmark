@@ -2,7 +2,7 @@ import os
 
     
 # getting size of zarr folder recursively 
-def folder_size(folder_path: str) -> int:
+def folder_size(folder_path: str) -> str:
     def convert_bytes(B: int) -> str:
         """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
         B = float(B)
@@ -38,6 +38,5 @@ def folder_size(folder_path: str) -> int:
     size = get_folder_size(folder = folder_path)
     formatted_size = convert_bytes(B = size)
     
-    print(f"The zarr folder is of size {formatted_size}\n\n")
-    return size
+    return formatted_size
     

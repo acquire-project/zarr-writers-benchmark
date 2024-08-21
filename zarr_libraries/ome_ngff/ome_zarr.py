@@ -35,7 +35,7 @@ class Ome_Zarr:
 
             # print info to the terminal 
             print(f"Write #{i + 1}\nOME-Zarr -> creating zarr : {total_time} seconds")
-            folder_size(result_path)
+            print(f"The zarr folder is of size {folder_size(result_path)}\n\n")
             
             size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
             file_sizes.append(size * 10**-9) # converts bytes to GB
@@ -47,7 +47,7 @@ class Ome_Zarr:
     
     def continuous_write_test(self, graph: matplotlib.axes._axes.Axes, 
                               avg_graph: matplotlib.axes._axes.Axes, 
-                              append_dim_size: int, step: int) -> int:
+                              append_dim_size: int, step: int) -> float:
         # calls continuous write function and graphs results
         print("\n\n--------OME-Zarr Stress Test--------\n\n")
         file_sizes, bandwidths = self.__continuous_write(
@@ -58,6 +58,6 @@ class Ome_Zarr:
         print("--------------------------------------------------------------\n\n")
         graph.plot(file_sizes, bandwidths, label="OME-Zarr", marker='o')
         avg_graph.bar("OME-Zarr", np.average(bandwidths))
-        return np.average(bandwidths)
+        return float(np.average(bandwidths))
 
         

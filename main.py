@@ -26,7 +26,7 @@ def main() -> None:
                 continue
 
             bandwidth_map[name + " Append"] = (
-                writer.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=10)
+                writer.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100)
             ) 
         
         # setting up graph for append tests
@@ -44,7 +44,7 @@ def main() -> None:
         '''
         for name, writer in zarr_writers.items():
             bandwidth_map[name + " Write"] = (
-                writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=40, step=5)
+                writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=51, step=5)
             ) 
          
         # print the average bandwidth for each of the tests
