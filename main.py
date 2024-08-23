@@ -10,7 +10,8 @@ def main() -> None:
         zarr_writers = {
             "TensorStore" : Tensorstore(shape=shape, chunks=chunks),
             "Zarr Python" : Zarr_Python(shape=shape, chunks=chunks),
-            "OME Zarr"    : Ome_Zarr(shape=shape, chunks=chunks)   
+            "OME Zarr"    : Ome_Zarr(shape=shape, chunks=chunks),
+            "Cpp Zarr"    : Cpp_Zarr(shape=shape, chunks=chunks)
         }
         
         '''
@@ -23,9 +24,9 @@ def main() -> None:
         for name, writer in zarr_writers.items():
             if name != "TensorStore" and name != "Zarr Python":
                 continue
-             
+
             bandwidth_map[name + " Append"] = (
-                writer.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=50)
+                writer.continuous_append_test(graph=graph[1][0], avg_graph=graph[1][1], append_dim_size=100)
             ) 
         
         # setting up graph for append tests
@@ -43,9 +44,9 @@ def main() -> None:
         '''
         for name, writer in zarr_writers.items():
             bandwidth_map[name + " Write"] = (
-                writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=15, step=5)
+                writer.continuous_write_test(graph=graph[0][0], avg_graph=graph[0][1], append_dim_size=51, step=5)
             ) 
-        
+         
         # print the average bandwidth for each of the tests
         print(f"Shape {shape}, Chunks {chunks}")
         print("----------Bandwidth----------")
