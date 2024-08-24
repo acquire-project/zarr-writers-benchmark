@@ -6,7 +6,7 @@ def folder_size(folder_path: str) -> str:
     def convert_bytes(B: int) -> str:
         """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
         B = float(B)
-        KB = float(1000) # change to 1024 for non mac file systems 
+        KB = float(1024) # change to 1024 for non mac file systems 
         MB = float(KB ** 2) # 1,048,576
         GB = float(KB ** 3) # 1,073,741,824
         TB = float(KB ** 4) # 1,099,511,627,776

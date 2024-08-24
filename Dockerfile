@@ -50,4 +50,4 @@ RUN mkdir build && \
     cd ..
 
 # running the benchmark
-#CMD [ "python", "main.py" ]
+CMD [ "python", "main.py" ]
