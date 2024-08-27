@@ -8,15 +8,20 @@ class Tensorstore:
     def __init__(self) -> None:
         self.__path_to_data = str((Path(__file__).parent / "../example_data/tensorstore_data/test.zarr").resolve())     
         
+        
+    @property
+    def data_path(self) -> str:
+        return self.__path_to_data 
+        
    
-    def write_zarr(self, shape: list, chunks: list, zarr_data: np.ndarray[np.uint8]) -> int:
+    def write_zarr(self, shape: list, chunks: list, zarr_data: np.ndarray) -> float:
         # The metadata for the zarr folder that is to be created (specifications)
         zarr_spec = {
             'driver': 'zarr',
             'dtype': 'uint8',
             'kvstore': {
                 'driver': 'file',
-                'path': self.get_data_path(),
+                'path': self.data_path,
             },
             'metadata': {
                 'compressor': {
@@ -45,9 +50,9 @@ class Tensorstore:
         return total_time
 
 
-    def append_zarr(self, shape: list, chunks: list, new_shape: int, zarr_data: np.ndarray[np.uint8], multiplier: int) -> int:
+    def append_zarr(self, shape: list, chunks: list, new_shape: int, zarr_data: np.ndarray, multiplier: int) -> float:
         # if there is no data to append to, create it
-        if not Path(self.get_data_path()).exists():
+        if not Path(self.data_path).exists():
             return self.write_zarr(shape=shape, chunks=chunks, zarr_data=zarr_data)
         
         zarr_folder = ts.open(
@@ -55,7 +60,7 @@ class Tensorstore:
                 'driver': 'zarr',
                 'kvstore': {
                     'driver': 'file',
-                    'path': self.get_data_path()
+                    'path': self.data_path
                 }
             },
             open=True
@@ -67,9 +72,5 @@ class Tensorstore:
         zarr_folder[(shape[0] * (multiplier - 1)):, :, :].write(zarr_data).result()
         total_time = time.perf_counter() - t
         
-        return total_time
-    
-    
-    def get_data_path(self) -> str:
-        return self.__path_to_data     
+        return total_time   
         

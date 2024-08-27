@@ -11,9 +11,14 @@ class Ome_Zarr:
         self.__path_to_data = str((Path(__file__).parent / "../example_data/ome_zarr_data/test.zarr").resolve())
     
     
-    def write_zarr(self, shape: list, chunks: list, zarr_data: np.ndarray[np.uint8]) -> int:
+    @property
+    def data_path(self) -> str:
+        return self.__path_to_data 
+    
+    
+    def write_zarr(self, chunks: list, zarr_data: np.ndarray) -> float:
         # create zarr folder with new shape and initialize data for the folder 
-        store = parse_url(self.get_data_path(), mode="w").store
+        store = parse_url(self.data_path, mode="w").store
         root = zarr.group(store=store)
 
         # timing the data written to the zarr folder in seconds
@@ -22,8 +27,4 @@ class Ome_Zarr:
         total_time = time.perf_counter() - t
         
         return total_time
-
- 
-    def get_data_path(self) -> str:
-        return self.__path_to_data
         
