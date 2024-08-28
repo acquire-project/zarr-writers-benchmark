@@ -26,6 +26,7 @@ def test_cpp_zarr_writes_correct_amount_of_data(shape: list, chunks: list):
     cpp_zarr.write_zarr(shape=shape, chunks=chunks)
     expected_size = np.prod(shape)
     
+    # the actual size can be larger but can never be smaller that expected size
     assert folder_size_in_bytes(cpp_zarr.data_path) >= expected_size
     shutil.rmtree(cpp_zarr.data_path)    
     

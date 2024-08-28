@@ -27,6 +27,7 @@ def test_zarr_python_writes_correct_amount_of_data(shape: list, chunks: list):
     zarr_python.write_zarr(shape=shape, chunks=chunks, zarr_data=zarr_data)
     expected_size = np.prod(shape)
     
+    # the actual size can be larger but can never be smaller that expected size
     assert folder_size_in_bytes(zarr_python.data_path) >= expected_size
     shutil.rmtree(zarr_python.data_path)    
     
@@ -45,6 +46,7 @@ def test_zarr_python_append_writes_correct_amount_of_data(shape: list, chunks: l
     zarr_python.append_zarr(shape=shape, chunks=chunks, zarr_data=zarr_data)
     expected_size = np.prod(shape)
     
+    # checking the size of the first append
     assert folder_size_in_bytes(zarr_python.data_path) >= expected_size
     
     new_shape = [shape[0] * (2), *shape[1:]]
@@ -52,5 +54,6 @@ def test_zarr_python_append_writes_correct_amount_of_data(shape: list, chunks: l
     zarr_python.append_zarr(shape=shape, chunks=chunks, zarr_data=new_data)
     expected_size = np.prod(new_shape)
     
+    # changing the shape and comparing the expected size after the second append
     assert folder_size_in_bytes(zarr_python.data_path) >= expected_size
     shutil.rmtree(zarr_python.data_path)

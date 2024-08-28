@@ -27,6 +27,7 @@ def test_ome_zarr_writes_correct_amount_of_data(shape: list, chunks: list):
     ome_zarr.write_zarr(chunks=chunks, zarr_data=zarr_data)
     expected_size = np.prod(shape)
     
+    # the actual size can be larger but can never be smaller that expected size
     assert folder_size_in_bytes(ome_zarr.data_path) >= expected_size
     shutil.rmtree(ome_zarr.data_path)
     
