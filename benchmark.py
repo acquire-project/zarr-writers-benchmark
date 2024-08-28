@@ -63,7 +63,7 @@ class Benchmark:
                         avg_graph: Optional[matplotlib.axes._axes.Axes] = None) -> None:
         
         # error checking to see if chosen lib exists in test
-        if choose_lib and choose_lib not in set(self.__zarr_writers.keys()):
+        if choose_lib != None and choose_lib not in set(self.__zarr_writers.keys()):
             raise ValueError(f"There is no library of name \"{choose_lib}\".") 
         
         gb_in_bytes = 1073741824 # represents number of bytes in a GB
@@ -94,7 +94,7 @@ class Benchmark:
                 
                 # prints info to the terminal 
                 print(f"Multiplier on first dimension : {multiplier}x\n{lib_name} -> creating zarr : {total_time} seconds")
-                print(f"The zarr folder is of size {folder_size(writer.data_path)}\n\n")
+                print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
                 
                 curr_data_size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
                 file_sizes.append(curr_data_size * 10**-9) # converts bytes to GB
@@ -115,13 +115,13 @@ class Benchmark:
             self.__print_results(additional_info=(f"Write Test GB Soft Cap: {num_of_gigabytes}GB"))
 
 
-    def run_append_test(self, num_of_gigabytes: int, show_results: bool,
+    def run_append_tests(self, num_of_gigabytes: int, show_results: bool,
                         choose_lib: Optional[str] = None,
                         graph: Optional[matplotlib.axes._axes.Axes] = None, 
                         avg_graph: Optional[matplotlib.axes._axes.Axes] = None) -> None:
         
         # error checking to see if chosen lib exists in test
-        if choose_lib and choose_lib not in set(self.__zarr_writers.keys()):
+        if choose_lib != None and choose_lib not in set(self.__zarr_writers.keys()):
             raise ValueError(f"There is no library of name \"{choose_lib}\".") 
         
         gb_in_bytes = 1073741824 # represents number of bytes in a GB
@@ -155,7 +155,7 @@ class Benchmark:
 
                 # prints info to the terminal 
                 print(f"Multiplier on first dimension : {multiplier}x\n{lib_name} -> appending zarr : {total_time} seconds")
-                print(f"The zarr folder is of size {folder_size(writer.data_path)}\n\n")
+                print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
                 
                 curr_data_size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
                 write_numbers.append(multiplier) # converts bytes to GB
@@ -180,7 +180,7 @@ class Benchmark:
                       append_graph: Optional[matplotlib.axes._axes.Axes] = None, append_avg_graph: Optional[matplotlib.axes._axes.Axes] = None,
                       write_graph: Optional[matplotlib.axes._axes.Axes] = None, write_avg_graph: Optional[matplotlib.axes._axes.Axes] = None) -> None:
         
-        self.run_append_test(num_of_gigabytes=append_test_gigabytes, show_results=False, choose_lib=choose_lib, graph=append_graph, avg_graph=append_avg_graph)
+        self.run_append_tests(num_of_gigabytes=append_test_gigabytes, show_results=False, choose_lib=choose_lib, graph=append_graph, avg_graph=append_avg_graph)
         self.run_write_tests(num_of_gigabytes=write_test_gigabytes, show_results=False, choose_lib=choose_lib, graph=write_graph, avg_graph=write_avg_graph)
         self.__print_results(additional_info=(f"Write Test GB Soft Cap: {write_test_gigabytes}GB | Append Test GB Soft Cap: {append_test_gigabytes}GB"))
     

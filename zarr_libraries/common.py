@@ -1,8 +1,22 @@
 import os
 
-    
+
 # getting size of zarr folder recursively 
-def folder_size(folder_path: str) -> str:
+def folder_size_in_bytes(folder: str) -> int:
+    total_size = os.path.getsize(folder)
+    
+    for item in os.listdir(folder):
+        item_path = os.path.join(folder, item)
+        
+        if os.path.isfile(item_path):
+            total_size += os.path.getsize(item_path)
+        elif os.path.isdir(item_path):
+            total_size += folder_size_in_bytes(item_path)
+            
+    return total_size
+
+    
+def formatted_folder_size(folder_path: str) -> str:
     def convert_bytes(B: int) -> str:
         """Return the given bytes as a human friendly KB, MB, GB, or TB string."""
         B = float(B)
@@ -22,20 +36,7 @@ def folder_size(folder_path: str) -> str:
         elif TB <= B:
             return '{0:.2f} TB'.format(B / TB)
     
-    def get_folder_size(folder: str) -> int:
-        total_size = os.path.getsize(folder)
-        
-        for item in os.listdir(folder):
-            item_path = os.path.join(folder, item)
-            
-            if os.path.isfile(item_path):
-                total_size += os.path.getsize(item_path)
-            elif os.path.isdir(item_path):
-                total_size += get_folder_size(item_path)
-                
-        return total_size
-    
-    size = get_folder_size(folder = folder_path)
+    size = folder_size_in_bytes(folder = folder_path)
     formatted_size = convert_bytes(B = size)
     
     return formatted_size
