@@ -50,7 +50,7 @@ class Tensorstore:
         return total_time
 
 
-    def append_zarr(self, shape: list, chunks: list, new_shape: int, zarr_data: np.ndarray, multiplier: int) -> float:
+    def append_zarr(self, shape: list, chunks: list, new_shape: list, zarr_data: np.ndarray, multiplier: int) -> float:
         # if there is no data to append to, create it
         if not Path(self.data_path).exists():
             return self.write_zarr(shape=shape, chunks=chunks, zarr_data=zarr_data)

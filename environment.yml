@@ -9,6 +9,7 @@ dependencies:
   - ome-zarr
   - zarr=2.15*
   - pip:
+      - pytest
       - cmake
       - ml-dtypes
       - tensorstore
