@@ -69,6 +69,10 @@ class Benchmark:
         gb_in_bytes = 1073741824 # represents number of bytes in a GB
         
         for lib_name, writer in self.__zarr_writers.items():
+            # some libraries fail if there already exists a folder in the path that they are writing to
+            if Path(writer.data_path).exists():
+                shutil.rmtree(writer.data_path)
+        
             # if a specified library is chosen for testing, skip any that isn't that test 
             if choose_lib != None and choose_lib != lib_name: continue
             
@@ -105,7 +109,7 @@ class Benchmark:
                 
                 shutil.rmtree(writer.data_path)
                 
-            if graph: graph.plot(file_sizes, write_speeds, label=lib_name)
+            if graph: graph.plot(file_sizes, write_speeds, label=lib_name, marker='o')
             if avg_graph: avg_graph.bar(lib_name, np.average(write_speeds))  
             self.__average_bandwidth[lib_name + " Write"] = np.average(write_speeds)
             

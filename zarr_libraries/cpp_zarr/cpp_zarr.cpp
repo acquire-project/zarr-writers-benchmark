@@ -38,7 +38,7 @@ float write_zarr(string path, vector<uint64_t> chunks, vector<uint64_t> shape)
     zarrObject.set_shape(writeShape);
     zarrObject.set_chunks(chunks);
     zarrObject.set_fill_value(1);
-    //zarrObject.set_order("C");
+    zarrObject.set_order("C");
     zarrObject.set_dimension_separator("/");
     zarrObject.set_clevel((uint64_t)1);
     zarrObject.set_chunkInfo(startCoords, endCoords);
