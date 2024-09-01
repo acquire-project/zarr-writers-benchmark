@@ -56,7 +56,9 @@ The benchmarking data was collected using Ubuntu 22.04 on a machine with the fol
 ### Testing Methodology
 There were two types of tests ran in this benchmarking suite, append tests for the libraries that supported an append functionality, and a write test. In both of these tests, data would be continuously written until it reached a multiple of the original specified size.<br>
 
-For example, if we had a starting shape of [64, 1080, 1920] and we set the variable "append_dim_size" equal to 50 in our tests, we would write data until we had a zarr folder with the shape of [3200, 1080, 1920] (64 * 50 = 3200).<br>
+For example, if we had a starting shape of [64, 1080, 1920] and we wanted to write out 50GBs, a multiplier that increases after every write would be multiplied to the first dimension of the shape.<br>
++ First Write : multiplier = 1, shape = [64 * multilplier, 1080, 1920]
++ Next Write : multiplier = 5, shape = [64 * multiplier, 1080, 1920]
 
 The difference between the two tests lies in the type of writes we were doing. In the append test, only one Zarr folder was created, which would then have data continuously appended to the back of it until it reached the desired size. For these tests, we would graph the speed of the write (GBps) vs. the current write number. In the write tests, we would create multiple Zarr folders, each slightly larger than the last, until we reached the desired size. For these tests, we would graph the speed of the write (GBps) vs. the amount of data being written.<br>
 
@@ -67,23 +69,26 @@ For these notes the following was specified for the zarr libraries:
 + shape = [64, 1080, 1920]
 + chunks = [64, 540, 1920]
 + LZ4 compression
++ C order data
 
 Ranking from fastest to slowest in append tests:
-+ TensorStore → 1.96 average GBps
-+ Zarr Python → 0.73 average GBps
++ Zarr Python → 1.70 average GBps
++ TensorStore → 1.08 average GBps
 
 Ranking from fastest to slowest in write tests:
-+ TensorStore → 2.45 average GBps
-+ Zarr Python → 2.02 avergae GBps
++ TensorStore → 1.99 average GBps
++ Zarr Python → 1.76 average GBps
 + OME Zarr $~~~$ → 0.29 average GBps
++ Cpp Zarr $~~~$ → 0.19 average GBps
 
 <strong>Memory Usage / Threads:</strong><br>
 
 For the following notes, I will be using ratios like 1:1, 3:1, etc., to represent how much memory Python is using versus how much data is being written out. For example, if I have a ratio of 2:1, it means Python takes up 2 GB for every 1 GB of data being written, indicating that some level of data copying is occurring. These ratios help us understand how memory efficient these Zarr libraries are and can help us draw conclusions about their performance in comparison to one another.<br>
 
-<strong>TensorStore :</strong> Around 3:1 memory usage and a consistent utilization of 28 threads.<br>
-<strong>Zarr Python :</strong> Around 2:1 memory usage and a consistent utilization of 11 threads.<br>
-<strong>OME Zarr :</strong> Around 5:1 memory usage and a consistent utilization of 10 threads.<br>
+<strong>TensorStore :</strong> Around 3:1 memory usage and a consistent utilization of 59 threads.<br>
+<strong>Zarr Python :</strong> Around 2:1 memory usage and a consistent utilization of 26 threads.<br>
+<strong>OME Zarr :</strong> Around 5:1 memory usage and a consistent utilization of 26 threads.<br>
+<strong>CPP Zarr :</strong> Around 2:1 memory usage and a consistent utilization of 41 threads.<br>
 
 <strong>Features:</strong><br>
 
@@ -98,6 +103,7 @@ Please note that this is just a list of notable features, highlighting those tha
 <strong>Zarr Python</strong>
 + Great memory efficiency with a memory usage of 2:1 and a decent amount of multithreading, with the library utilizing 11 threads.
 + This leads to efficient writes placing it firmly as one of the top performers in terms of write speeds.
++ Comes with built in functionality for appending data which could be an explanation for the library having the strongest append speeds tested
 
 <strong>OME Zarr</strong>
 + Worst memory efficiency of the group, with a memory usage of 5:1, indicating that a large amount of data is being copied during the write process, while using about the same number of threads as Zarr Python.
@@ -108,3 +114,8 @@ Please note that this is just a list of notable features, highlighting those tha
 + Decent memory efficiency with a memory usage of 3:1, indicating that a decent amount of copying is occurring. However, there is great use of multithreading, with 28 threads being utilized.
 + Memory usage makes it less efficient than Zarr Python in that category, but it makes up for this with the number of threads it uses, which is almost three times the amount used by OME Zarr and Zarr Python.
 + Overall, this leads to TensorStore being the best-performing library in terms of write speeds among those tested.
+
+<strong>Cpp Zarr</strong>
++ Tied with Zarr Python in terms of memory efficiency making it very efficient in that category.
++ Utilizes 41 threads which puts it in the middle of the pack compared to the libraries tested.
++ Cpp Zarr was built for working with F order data so when using C order data its performance drops off dramatically, leaving it to be the worst perfroming library tested. Homever, if working with F order data, Cpp Zarr boasts the best write speeds out of the bunch.
