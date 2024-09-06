@@ -1,0 +1,3 @@
+[submodule "zarr_libraries/acquire_zarr/acquire-driver-zarr"]
+	path = acquire-driver-zarr
+	url = git@github.com:acquire-project/acquire-driver-zarr.git
