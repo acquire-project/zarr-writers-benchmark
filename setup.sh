@@ -10,15 +10,6 @@ else
   echo "Directory '$BUILD_DIR' does not exist. No need to delete."
 fi
 
-# create a new directory
-echo "Creating a new '$BUILD_DIR' directory..."
-mkdir "$BUILD_DIR"
-
-echo "Directory '$BUILD_DIR' has been created successfully."
-
 # build cpp code 
-cd "$BUILD_DIR" || { echo "Failed to change directory to '$BUILD_DIR'"; exit 1; }
-cmake .. || { echo "Failed to run cmake '$BUILD_DIR'"; exit 1; }
-make || { echo "Failed to run make"; exit 1; }
-
-echo "Build process completed successfully."
+cmake --preset=default || { echo "Failed to run cmake '$BUILD_DIR'"; exit 1; }
+cmake --build build || { echo "Failed to build"; exit 1; }

@@ -1,22 +1,29 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.15)
 project(cpp-zarr)
 cmake_policy(SET CMP0057 NEW)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# finding the cppZarr lib
+# Find libraries and packages
 find_library(cppZarrLib cppZarr REQUIRED)
-
-# setting include dir for dependencies
-include_directories(/usr/local/include)
-
-# pybind11
+find_package(blosc CONFIG REQUIRED)
+find_package(miniocpp CONFIG REQUIRED)
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
-include_directories(${Python3_INCLUDE_DIRS})
+find_package(pybind11 CONFIG REQUIRED)
 
-find_package(pybind11 REQUIRED)
-include_directories(${pybind11_INCLUDE_DIR})
+# Set up acquire-zarr to link against
+set(azlib "${CMAKE_CURRENT_LIST_DIR}/zarr_libraries/acquire/lib/libacquire-zarr.so")
 
+# Setting include directories for cpp-zarr
+include_directories(/usr/local/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/zarr_libraries/acquire/include)
+
+# Define pybind11 modules
 pybind11_add_module(pyCppZarr zarr_libraries/cpp_zarr/cpp_zarr.cpp)
 target_link_libraries(pyCppZarr PRIVATE ${cppZarrLib})
+
+pybind11_add_module(pyAcquire zarr_libraries/acquire/acquire.cpp)
+
+# target_include_directories(pyAcquire PRIVATE ${CMAKE_CURRENT_LIST_DIR}/zarr_libraries/acquire/include)
+target_link_libraries(pyAcquire PRIVATE miniocpp::miniocpp blosc_static ${azlib})
