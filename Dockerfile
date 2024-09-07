@@ -22,6 +22,11 @@ RUN git clone https://github.com/abcucberkeley/cpp-zarr && \
     make -j && \
     make install
 
+WORKDIR /app
+
+RUN git clone https://github.com/microsoft/vcpkg.git && \
+    cd vcpkg && ./bootstrap-vcpkg.sh
+
 RUN pip install "pybind11[global]"
 
 # set directory for code base
@@ -39,15 +44,16 @@ RUN echo "source activate benchmark" > ~/.bashrc
 # set conda to path for working in docker terminal
 ENV PATH=/opt/conda/envs/benchmark/bin:$PATH
 
+# set vcpkg to path for cmake
+ENV VCPKG_ROOT=/path/to/vcpkg
+ENV PATH=$VCPKG_ROOT:$PATH
+
 # copy source code into docker app
 COPY . .
 
 # build c++ code 
-RUN mkdir build && \
-    cd build && \
-    cmake .. && \
-    make && \
-    cd ..
+RUN cmake --preset=default && \
+    cmake --build build
 
 # running the benchmark
 CMD [ "python", "main.py" ]

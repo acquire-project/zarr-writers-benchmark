@@ -7,7 +7,7 @@ def main() -> None:
     benchmark = Benchmark(shape=[64, 1080, 1920], chunks=[64, 540, 960])
     
     benchmark.run_all_tests(
-        append_test_gigabytes=50, write_test_gigabytes=5,
+        append_test_gigabytes=50, write_test_gigabytes=5, choose_lib="Cpp Zarr",
         append_graph=graph[1][0], append_avg_graph=graph[1][1],
         write_graph=graph[0][0], write_avg_graph=graph[0][1]
     )
