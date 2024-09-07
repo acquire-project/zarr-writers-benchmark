@@ -1,5 +1,6 @@
 from zarr_libraries import *
 from typing import Optional
+from collections import defaultdict
 import numpy as np
 import shutil
 import matplotlib.axes
@@ -15,27 +16,9 @@ class Benchmark:
             "OME Zarr"    : Ome_Zarr(),
             "Cpp Zarr"    : Cpp_Zarr()
         }
-        self.__write_zarr = {}
-        self.__append_zarr = {}
         
     
-    ''' These functions are intended to be "private" and for use only inside the class '''    
-    def __set_write_functions(self, shape: list, zarr_data: np.ndarray) -> None:
-        self.__write_zarr = {
-            "TensorStore" : lambda: self.__zarr_writers["TensorStore"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
-            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
-            "OME Zarr" : lambda: self.__zarr_writers["OME Zarr"].write_zarr(chunks=self.chunks, zarr_data=zarr_data),
-            "Cpp Zarr" : lambda: self.__zarr_writers["Cpp Zarr"].write_zarr(shape=shape, chunks=self.chunks)
-        }
-        
-        
-    def __set_append_functions(self,new_shape: list, zarr_data: np.ndarray, multiplier: int) -> None:
-        self.__append_zarr = {
-            "TensorStore" : lambda: self.__zarr_writers["TensorStore"].append_zarr(shape=self.shape, chunks=self.chunks, new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier),
-            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data) 
-        }
-        
-    
+    ''' These functions are intended to be "private" and for use only inside the class '''        
     def __print_results(self, additional_info: Optional[str] = None):
         if additional_info: print(additional_info)
         
@@ -66,58 +49,75 @@ class Benchmark:
         if choose_lib != None and choose_lib not in set(self.__zarr_writers.keys()):
             raise ValueError(f"There is no library of name \"{choose_lib}\".") 
         
-        gb_in_bytes = 1073741824 # represents number of bytes in a GB
+        gb_in_bytes = 1073741824         # represents number of bytes in a GB
+        multiplier = 1                   # multiplier that increases shape of zarr folder written
+        curr_data_size = 0               # test will run until curr_data_size reaches specified GB size passed into the function
+        write_speeds = defaultdict(list) # dict that holds the write speeds for every lib tested
+        file_sizes = []                  # keeps track of the size of data written for graphing purposes
         
-        for lib_name, writer in self.__zarr_writers.items():
-            # some libraries fail if there already exists a folder in the path that they are writing to
-            if Path(writer.data_path).exists():
-                shutil.rmtree(writer.data_path)
+        print(f"\n\n--------Write Stress Test--------\n\n")
         
-            # if a specified library is chosen for testing, skip any that isn't that test 
-            if choose_lib != None and choose_lib != lib_name: continue
+        while curr_data_size < (num_of_gigabytes * gb_in_bytes):
+            # modify the append dimension, unpack the rest 
+            new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
             
-            print(f"\n\n--------{lib_name} Stress Test--------\n\n")
+            # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
+            curr_data_size = np.prod(new_shape)
             
-            multiplier = 1 # multiplier that increases shape of zarr folder written
-            curr_data_size = 0 # test will run until curr_data_size reaches specified GB size passed into the function
-            write_speeds = []
-            file_sizes = []
+            # creating new data and adjusting the shape
+            zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
             
-            while curr_data_size < (num_of_gigabytes * gb_in_bytes):
-                # modify the append dimension, unpack the rest 
-                new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
-                zarr_data = np.empty(())
+            print("--------------------------------------------------------------------")
+            print(f"Current shape : {new_shape} | Current multiplier {multiplier}x")
+            print("--------------------------------------------------------------------")
+            
+            for lib_name, writer in self.__zarr_writers.items():
+                # ensures data doesn't already exists
+                if Path(writer.data_path).exists():
+                    shutil.rmtree(writer.data_path)
+                    
+                # if a specified library is chosen for testing, skip any that isn't that test
+                if choose_lib != None and choose_lib != lib_name: 
+                    continue 
                 
-                # Cpp zarr implementation creates data in cpp_zarr.cpp, skip here to avoid making unused data 
-                if lib_name != "Cpp Zarr":
-                    zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
-            
-                # returns time taken to write zarr folder 
-                self.__set_write_functions(shape=new_shape, zarr_data=zarr_data)
-                total_time = self.__write_zarr[lib_name]() # calling a lambda function inside of a dictionary
+                # store time taken to write zarr
+                if lib_name == "TensorStore" or lib_name == "Zarr Python":
+                    total_time = writer.write_zarr(shape=new_shape, chunks=self.chunks, zarr_data=zarr_data)
+                elif lib_name == "OME Zarr":
+                    total_time = writer.write_zarr(chunks=self.chunks, zarr_data=zarr_data)
+                elif lib_name == "Cpp Zarr":
+                    total_time = writer.write_zarr(shape=new_shape, chunks=self.chunks)
                 
                 # prints info to the terminal 
-                print(f"Multiplier on first dimension : {multiplier}x\n{lib_name} -> creating zarr : {total_time} seconds")
+                print(f"{lib_name} -> creating zarr : {total_time} seconds")
                 print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
                 
-                curr_data_size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
-                file_sizes.append(curr_data_size * 10**-9) # converts bytes to GB
-                write_speeds.append((curr_data_size * 10**-9) / total_time) # GB/s
+                write_speeds[lib_name].append((curr_data_size * 10**-9) / total_time) # GB/s
+            
+            file_sizes.append(curr_data_size * 10**-9) # converts bytes to GB
+            multiplier += 4 if multiplier == 1 else 5  # write tests take longer so we increment by 5 
+            
+        print("--------------------------------------------------------------\n\n")
         
-                # goes from 1 to 5, then adds 5 every time after that
-                multiplier += 4 if multiplier == 1 else 5 
-                
-                shutil.rmtree(writer.data_path)
-                
-            if graph: graph.plot(file_sizes, write_speeds, label=lib_name, marker='o')
-            if avg_graph: avg_graph.bar(lib_name, np.average(write_speeds))  
-            self.__average_bandwidth[lib_name + " Write"] = np.average(write_speeds)
+        # plot the data and clean up the folders
+        for lib_name, writer in self.__zarr_writers.items():
+            # if a specified library is chosen for testing, skip any that isn't that test
+            if choose_lib != None and choose_lib != lib_name: 
+                continue 
             
-            print("--------------------------------------------------------------\n\n")
-            
+            # cleans up data left behind
+            if Path(writer.data_path).exists():
+                shutil.rmtree(writer.data_path) 
+                
+            if graph: 
+                graph.plot(file_sizes, write_speeds[lib_name], label=lib_name, marker='o')
+            if avg_graph: 
+                avg_graph.bar(lib_name, np.average(write_speeds[lib_name]))
+            self.__average_bandwidth[lib_name + " Write"] = np.average(write_speeds[lib_name])
+              
         if show_results:
             self.__print_results(additional_info=(f"Write Test GB Soft Cap: {num_of_gigabytes}GB"))
-
+            
 
     def run_append_tests(self, num_of_gigabytes: int, show_results: bool,
                         choose_lib: Optional[str] = None,
@@ -128,55 +128,75 @@ class Benchmark:
         if choose_lib != None and choose_lib not in set(self.__zarr_writers.keys()):
             raise ValueError(f"There is no library of name \"{choose_lib}\".") 
         
-        gb_in_bytes = 1073741824 # represents number of bytes in a GB
-        write_size = np.prod(self.shape) # amount of bytes appended on in each function call
+        # these are the only libraries that allow for appending of data
+        if choose_lib != None and choose_lib != "TensorStore" and choose_lib != "Zarr Python":
+            return
         
+        gb_in_bytes = 1073741824         # represents number of bytes in a GB
+        write_size = np.prod(self.shape) # amount of bytes appended on in each function call
+        multiplier = 1                   # multiplier that increases shape of zarr folder written
+        curr_data_size = 0               # test will run until curr_data_size reaches specified GB size passed into the function
+        write_speeds = defaultdict(list) # dict that holds the write speeds for every lib tested
+        write_numbers = []               # keeps track of writes in list for graphing purposes
+        
+        print(f"\n\n--------Append Stress Test--------\n\n")
+        
+        while curr_data_size < (num_of_gigabytes * gb_in_bytes):
+            # modify the append dimension, unpack the rest 
+            new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
+            
+            # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
+            curr_data_size = np.prod(new_shape) 
+            
+            # creating new data and adjusting the shape
+            zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
+            
+            print("--------------------------------------------------------------------")
+            print(f"Current shape : {new_shape} | Current multiplier {multiplier}x")
+            print("--------------------------------------------------------------------")
+            
+            for lib_name, writer in self.__zarr_writers.items():    
+                # if a specified library is chosen for testing, skip any that isn't that test
+                if choose_lib != None and choose_lib != lib_name: 
+                    continue 
+                
+                # store time taken to append data
+                if lib_name == "TensorStore":
+                    total_time = writer.append_zarr(shape=self.shape, chunks=self.chunks, new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier)
+                elif lib_name == "Zarr Python":
+                    total_time = writer.append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data)
+ 
+                # prints info to the terminal 
+                print(f"{lib_name} -> appending zarr : {total_time} seconds")
+                print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
+                
+                write_speeds[lib_name].append((write_size * 10**-9) / total_time) # GB/s
+        
+            write_numbers.append(multiplier) # keeps track of the number of writes done by each lib
+            multiplier += 1
+            
+        print("--------------------------------------------------------------\n\n")
+            
+        # plot the data collected 
         for lib_name, writer in self.__zarr_writers.items():
             # these are the only libraries that allow for appending of data
             if lib_name != "TensorStore" and lib_name != "Zarr Python":
                 continue
             
             # if a specified library is chosen for testing, skip any that isn't that test
-            if choose_lib != None and choose_lib != lib_name: continue  
+            if choose_lib != None and choose_lib != lib_name: 
+                continue 
             
-            print(f"\n\n--------{lib_name} Append Stress Test--------\n\n")
-            
-            multiplier = 1 # multiplier that increases shape of zarr folder written
-            curr_data_size = 0 # test will run until curr_data_size reaches specified GB size passed into the function
-            write_speeds = []
-            write_numbers = []
-            
-            while curr_data_size < (num_of_gigabytes * gb_in_bytes):
-                # modify the append dimension, unpack the rest 
-                new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
-                
-                # creating new data and adjusting the shape
-                zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
-                
-                # returns time taken to write zarr folder / both libraries use a different approach hence the if statements
-                self.__set_append_functions(new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier)
-                total_time = self.__append_zarr[lib_name]() # calling a lambda function inside of a dictionary
-
-                # prints info to the terminal 
-                print(f"Multiplier on first dimension : {multiplier}x\n{lib_name} -> appending zarr : {total_time} seconds")
-                print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
-                
-                curr_data_size = np.prod(new_shape) # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
-                write_numbers.append(multiplier) # converts bytes to GB
-                write_speeds.append((write_size * 10**-9) / total_time) # GB/s
-        
-                multiplier += 1
-                
             shutil.rmtree(writer.data_path) 
                 
-            if graph: graph.plot(write_numbers, write_speeds, label=lib_name)
-            if avg_graph: avg_graph.bar(lib_name, np.average(write_speeds))
-            self.__average_bandwidth[lib_name + " Append"] = np.average(write_speeds)
-            
-            print("--------------------------------------------------------------\n\n")
-            
+            if graph: 
+                graph.plot(write_numbers, write_speeds[lib_name], label=lib_name)
+            if avg_graph: 
+                avg_graph.bar(lib_name, np.average(write_speeds[lib_name]))
+            self.__average_bandwidth[lib_name + " Append"] = np.average(write_speeds[lib_name])
+              
         if show_results:
-            self.__print_results(additional_info=(f"Write Test GB Soft Cap: {num_of_gigabytes}GB"))
+            self.__print_results(additional_info=(f"Append Test GB Soft Cap: {num_of_gigabytes}GB"))
     
     
     def run_all_tests(self, append_test_gigabytes: int, write_test_gigabytes: int, 
