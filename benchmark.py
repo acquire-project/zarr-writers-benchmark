@@ -13,7 +13,8 @@ class Benchmark:
             "TensorStore" : Tensorstore(),
             "Zarr Python" : Zarr_Python(),
             "OME Zarr"    : Ome_Zarr(),
-            "Cpp Zarr"    : Cpp_Zarr()
+            "Cpp Zarr"    : Cpp_Zarr(),
+            "Acquire Zarr": Acquire_Zarr()
         }
         self.__write_zarr = {}
         self.__append_zarr = {}
@@ -25,14 +26,16 @@ class Benchmark:
             "TensorStore" : lambda: self.__zarr_writers["TensorStore"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
             "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
             "OME Zarr" : lambda: self.__zarr_writers["OME Zarr"].write_zarr(chunks=self.chunks, zarr_data=zarr_data),
-            "Cpp Zarr" : lambda: self.__zarr_writers["Cpp Zarr"].write_zarr(shape=shape, chunks=self.chunks)
+            "Cpp Zarr" : lambda: self.__zarr_writers["Cpp Zarr"].write_zarr(shape=shape, chunks=self.chunks),
+            "Acquire Zarr" : lambda: self.__zarr_writers["Acquire Zarr"].write_zarr(shape=shape, chunks=self.chunks),
         }
         
         
     def __set_append_functions(self,new_shape: list, zarr_data: np.ndarray, multiplier: int) -> None:
         self.__append_zarr = {
             "TensorStore" : lambda: self.__zarr_writers["TensorStore"].append_zarr(shape=self.shape, chunks=self.chunks, new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier),
-            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data) 
+            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data),
+            "Acquire Zarr" : lambda: self.__zarr_writers["Acquire Zarr"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data)
         }
         
     
@@ -88,8 +91,8 @@ class Benchmark:
                 new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
                 zarr_data = np.empty(())
                 
-                # Cpp zarr implementation creates data in cpp_zarr.cpp, skip here to avoid making unused data 
-                if lib_name != "Cpp Zarr":
+                # Cpp zarr and Acquire Zarr implementations create data in their cpp files, skip here to avoid making unused data 
+                if lib_name not in ("Cpp Zarr", "Acquire Zarr"):
                     zarr_data = np.random.randint(low=0, high=256, size=new_shape, dtype=np.uint8)
             
                 # returns time taken to write zarr folder 
@@ -133,7 +136,7 @@ class Benchmark:
         
         for lib_name, writer in self.__zarr_writers.items():
             # these are the only libraries that allow for appending of data
-            if lib_name != "TensorStore" and lib_name != "Zarr Python":
+            if not lib_name in ("TensorStore", "Zarr Python", "Acquire Zarr"):
                 continue
             
             # if a specified library is chosen for testing, skip any that isn't that test

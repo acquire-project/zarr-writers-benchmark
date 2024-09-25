@@ -5,3 +5,5 @@ __pycache__/
 example_data/
 build/
 test.*
+.idea/
+cmake-build-*

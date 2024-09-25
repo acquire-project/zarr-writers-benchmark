@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.2)
-project(cpp-zarr)
+cmake_minimum_required(VERSION 3.3)
+project(zarr-writers-benchmark)
 cmake_policy(SET CMP0057 NEW)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+include(cmake/acquire-zarr.cmake)
 
 # finding the cppZarr lib
 find_library(cppZarrLib cppZarr REQUIRED)
@@ -20,3 +22,6 @@ include_directories(${pybind11_INCLUDE_DIR})
 
 pybind11_add_module(pyCppZarr zarr_libraries/cpp_zarr/cpp_zarr.cpp)
 target_link_libraries(pyCppZarr PRIVATE ${cppZarrLib})
+
+pybind11_add_module(pyAcquireZarr zarr_libraries/acquire_zarr/acquire-zarr.cpp)
+target_link_libraries(pyAcquireZarr PRIVATE acquire-zarr)
