@@ -14,11 +14,30 @@ class Benchmark:
             "TensorStore" : Tensorstore(),
             "Zarr Python" : Zarr_Python(),
             "OME Zarr"    : Ome_Zarr(),
-            "Cpp Zarr"    : Cpp_Zarr()
+            "Cpp Zarr"    : Cpp_Zarr(),
+            "Acquire Zarr": Acquire_Zarr()
         }
         
     
-    ''' These functions are intended to be "private" and for use only inside the class '''        
+    ''' These functions are intended to be "private" and for use only inside the class '''    
+    def __set_write_functions(self, shape: list, zarr_data: np.ndarray) -> None:
+        self.__write_zarr = {
+            "TensorStore" : lambda: self.__zarr_writers["TensorStore"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
+            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].write_zarr(shape=shape, chunks=self.chunks, zarr_data=zarr_data),
+            "OME Zarr" : lambda: self.__zarr_writers["OME Zarr"].write_zarr(chunks=self.chunks, zarr_data=zarr_data),
+            "Cpp Zarr" : lambda: self.__zarr_writers["Cpp Zarr"].write_zarr(shape=shape, chunks=self.chunks),
+            "Acquire Zarr" : lambda: self.__zarr_writers["Acquire Zarr"].write_zarr(shape=shape, chunks=self.chunks)
+        }
+        
+        
+    def __set_append_functions(self,new_shape: list, zarr_data: np.ndarray, multiplier: int) -> None:
+        self.__append_zarr = {
+            "TensorStore" : lambda: self.__zarr_writers["TensorStore"].append_zarr(shape=self.shape, chunks=self.chunks, new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier),
+            "Zarr Python" : lambda: self.__zarr_writers["Zarr Python"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data),
+            "Acquire Zarr" : lambda: self.__zarr_writers["Acquire Zarr"].append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data) 
+        }
+        
+    
     def __print_results(self, additional_info: Optional[str] = None):
         if additional_info: print(additional_info)
         
@@ -85,7 +104,7 @@ class Benchmark:
                     total_time = writer.write_zarr(shape=new_shape, chunks=self.chunks, zarr_data=zarr_data)
                 elif lib_name == "OME Zarr":
                     total_time = writer.write_zarr(chunks=self.chunks, zarr_data=zarr_data)
-                elif lib_name == "Cpp Zarr":
+                elif lib_name == "Cpp Zarr" or lib_name == "Acquire Zarr":
                     total_time = writer.write_zarr(shape=new_shape, chunks=self.chunks)
                 
                 # prints info to the terminal 
@@ -134,38 +153,33 @@ class Benchmark:
         
         gb_in_bytes = 1073741824         # represents number of bytes in a GB
         write_size = np.prod(self.shape) # amount of bytes appended on in each function call
-        multiplier = 1                   # multiplier that increases shape of zarr folder written
-        curr_data_size = 0               # test will run until curr_data_size reaches specified GB size passed into the function
-        write_speeds = defaultdict(list) # dict that holds the write speeds for every lib tested
-        write_numbers = []               # keeps track of writes in list for graphing purposes
         
-        print(f"\n\n--------Append Stress Test--------\n\n")
-        
-        while curr_data_size < (num_of_gigabytes * gb_in_bytes):
-            # modify the append dimension, unpack the rest 
-            new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
+        for lib_name, writer in self.__zarr_writers.items():
+            # these are the only libraries that allow for appending of data
+            if not lib_name in ("TensorStore", "Zarr Python", "Acquire Zarr"):
+                continue
             
-            # 3d array filled with 1 byte ints so multiplication gives accurate size in bytes
-            curr_data_size = np.prod(new_shape) 
+            # if a specified library is chosen for testing, skip any that isn't that test
+            if choose_lib != None and choose_lib != lib_name: continue  
             
-            # creating new data and adjusting the shape
-            zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
+            print(f"\n\n--------{lib_name} Append Stress Test--------\n\n")
             
-            print("--------------------------------------------------------------------")
-            print(f"Current shape : {new_shape} | Current multiplier {multiplier}x")
-            print("--------------------------------------------------------------------")
+            multiplier = 1 # multiplier that increases shape of zarr folder written
+            curr_data_size = 0 # test will run until curr_data_size reaches specified GB size passed into the function
+            write_speeds = []
+            write_numbers = []
             
-            for lib_name, writer in self.__zarr_writers.items():    
-                # if a specified library is chosen for testing, skip any that isn't that test
-                if choose_lib != None and choose_lib != lib_name: 
-                    continue 
+            while curr_data_size < (num_of_gigabytes * gb_in_bytes):
+                # modify the append dimension, unpack the rest 
+                new_shape = [self.shape[0] * (multiplier), *self.shape[1:]]
                 
-                # store time taken to append data
-                if lib_name == "TensorStore":
-                    total_time = writer.append_zarr(shape=self.shape, chunks=self.chunks, new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier)
-                elif lib_name == "Zarr Python":
-                    total_time = writer.append_zarr(shape=self.shape, chunks=self.chunks, zarr_data=zarr_data)
- 
+                # creating new data and adjusting the shape
+                zarr_data = np.random.randint(low=0, high=256, size=self.shape, dtype=np.uint8)
+                
+                # returns time taken to write zarr folder / both libraries use a different approach hence the if statements
+                self.__set_append_functions(new_shape=new_shape, zarr_data=zarr_data, multiplier=multiplier)
+                total_time = self.__append_zarr[lib_name]() # calling a lambda function inside of a dictionary
+
                 # prints info to the terminal 
                 print(f"{lib_name} -> appending zarr : {total_time} seconds")
                 print(f"The zarr folder is of size {formatted_folder_size(writer.data_path)}\n\n")
@@ -180,7 +194,7 @@ class Benchmark:
         # plot the data collected 
         for lib_name, writer in self.__zarr_writers.items():
             # these are the only libraries that allow for appending of data
-            if lib_name != "TensorStore" and lib_name != "Zarr Python":
+            if not lib_name in ("TensorStore", "Zarr Python", "Acquire Zarr"):
                 continue
             
             # if a specified library is chosen for testing, skip any that isn't that test
